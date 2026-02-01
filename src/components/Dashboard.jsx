@@ -4,6 +4,7 @@ import ConfirmModal from './ConfirmModal'
 
 // Use relative path for production (Render) or localhost for development
 const API_URL = import.meta.env.PROD ? '/api/customers' : 'http://localhost:5000/api/customers'
+const AUTH_API_URL = import.meta.env.PROD ? '/api/auth' : 'http://localhost:5000/api/auth'
 
 function Dashboard({ user, onLogout }) {
   const [customers, setCustomers] = useState([])
@@ -32,6 +33,13 @@ function Dashboard({ user, onLogout }) {
     variant: 'danger',
     onConfirm: null
   })
+  const [showSettings, setShowSettings] = useState(false)
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newUsername, setNewUsername] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmNewPassword, setConfirmNewPassword] = useState('')
+  const [settingsMessage, setSettingsMessage] = useState('')
+  const [settingsLoading, setSettingsLoading] = useState(false)
 
   useEffect(() => {
     fetchCustomers()
@@ -449,6 +457,77 @@ function Dashboard({ user, onLogout }) {
     }, 0)
   }
 
+  const handleUpdateCredentials = async (e) => {
+    e.preventDefault()
+
+    if (!currentPassword) {
+      setSettingsMessage('Please enter your current password')
+      return
+    }
+
+    if (!newUsername && !newPassword) {
+      setSettingsMessage('Please enter a new username or password')
+      return
+    }
+
+    if (newPassword && newPassword !== confirmNewPassword) {
+      setSettingsMessage('New passwords do not match')
+      return
+    }
+
+    if (newPassword && newPassword.length < 6) {
+      setSettingsMessage('New password must be at least 6 characters')
+      return
+    }
+
+    try {
+      setSettingsLoading(true)
+      setSettingsMessage('')
+
+      const response = await fetch(`${AUTH_API_URL}/update-credentials`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          currentPassword,
+          newUsername: newUsername || undefined,
+          newPassword: newPassword || undefined
+        })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        if (response.status === 401 && data.message === 'Not authorized, token failed') {
+          onLogout()
+          return
+        }
+        setSettingsMessage(data.message || 'Error updating credentials')
+        return
+      }
+
+      setSettingsMessage('Credentials updated successfully!')
+      setCurrentPassword('')
+      setNewUsername('')
+      setNewPassword('')
+      setConfirmNewPassword('')
+
+      // Update displayed username if changed
+      if (data.username && user) {
+        user.username = data.username
+      }
+
+      setTimeout(() => {
+        setSettingsMessage('')
+        setShowSettings(false)
+      }, 2000)
+    } catch (error) {
+      setSettingsMessage('Error updating credentials. Please try again.')
+      console.error('Error updating credentials:', error)
+    } finally {
+      setSettingsLoading(false)
+    }
+  }
+
   const handleFileSelect = (e) => {
     const file = e.target.files[0]
     if (file) {
@@ -521,15 +600,93 @@ function Dashboard({ user, onLogout }) {
     <div className="dashboard">
       <div className="dashboard-header">
         <div className="header-content">
-          <h1>Loyalty Customer Management - MNS HOMEWARE</h1>
+          <h1>Loyalty Customer Management - Mom's Touch</h1>
           <div className="user-info">
             <span>Welcome, {user?.username}</span>
+            <button onClick={() => setShowSettings(!showSettings)} className="btn btn-settings">
+              Settings
+            </button>
             <button onClick={onLogout} className="btn btn-logout">
               Logout
             </button>
           </div>
         </div>
       </div>
+
+      {showSettings && (
+        <div className="settings-overlay">
+          <div className="settings-panel">
+            <div className="settings-header">
+              <h2>Account Settings</h2>
+              <button onClick={() => setShowSettings(false)} className="btn-close">&times;</button>
+            </div>
+            <form onSubmit={handleUpdateCredentials} className="settings-form">
+              <div className="form-group">
+                <label htmlFor="currentPassword">Current Password *</label>
+                <input
+                  type="password"
+                  id="currentPassword"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  placeholder="Enter current password"
+                  required
+                />
+              </div>
+
+              <hr style={{ margin: '20px 0', border: 'none', borderTop: '1px solid #ddd' }} />
+
+              <div className="form-group">
+                <label htmlFor="newUsername">New Username (optional)</label>
+                <input
+                  type="text"
+                  id="newUsername"
+                  value={newUsername}
+                  onChange={(e) => setNewUsername(e.target.value)}
+                  placeholder="Enter new username"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="newPassword">New Password (optional)</label>
+                <input
+                  type="password"
+                  id="newPassword"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Enter new password (min 6 characters)"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="confirmNewPassword">Confirm New Password</label>
+                <input
+                  type="password"
+                  id="confirmNewPassword"
+                  value={confirmNewPassword}
+                  onChange={(e) => setConfirmNewPassword(e.target.value)}
+                  placeholder="Confirm new password"
+                  disabled={!newPassword}
+                />
+              </div>
+
+              {settingsMessage && (
+                <div className={`settings-message ${settingsMessage.includes('successfully') ? 'success' : 'error'}`}>
+                  {settingsMessage}
+                </div>
+              )}
+
+              <div className="settings-actions">
+                <button type="submit" className="btn btn-primary" disabled={settingsLoading}>
+                  {settingsLoading ? 'Updating...' : 'Update Credentials'}
+                </button>
+                <button type="button" onClick={() => setShowSettings(false)} className="btn btn-secondary">
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       <div className="container">
         <div className="section">

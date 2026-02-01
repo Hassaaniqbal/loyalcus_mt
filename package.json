@@ -29,6 +29,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@rollup/rollup-win32-x64-msvc": "^4.40.0",
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.1",
@@ -39,5 +40,8 @@
     "globals": "^16.5.0",
     "nodemon": "^3.1.11",
     "vite": "^7.2.4"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-win32-x64-msvc": "^4.57.1"
   }
 }
