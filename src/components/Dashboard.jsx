@@ -10,6 +10,7 @@ function Dashboard({ user, onLogout }) {
   const [customers, setCustomers] = useState([])
   const [name, setName] = useState('')
   const [mobile, setMobile] = useState('')
+  const [dateOfBirth, setDateOfBirth] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResult, setSearchResult] = useState(null)
   const [liveSearchResults, setLiveSearchResults] = useState([])
@@ -19,6 +20,7 @@ function Dashboard({ user, onLogout }) {
   const [editingCustomer, setEditingCustomer] = useState(null)
   const [editName, setEditName] = useState('')
   const [editMobile, setEditMobile] = useState('')
+  const [editDateOfBirth, setEditDateOfBirth] = useState('')
   const [importFile, setImportFile] = useState(null)
   const [importResults, setImportResults] = useState(null)
   const [showAddForm, setShowAddForm] = useState(false)
@@ -132,7 +134,8 @@ function Dashboard({ user, onLogout }) {
         headers: getAuthHeaders(),
         body: JSON.stringify({
           name: name.trim(),
-          mobile: mobile.trim()
+          mobile: mobile.trim(),
+          dateOfBirth: dateOfBirth || null
         })
       })
 
@@ -150,6 +153,7 @@ function Dashboard({ user, onLogout }) {
       await fetchCustomers()
       setName('')
       setMobile('')
+      setDateOfBirth('')
       setShowAddForm(false)
       setMessage(`Customer "${data.name}" added successfully!`)
 
@@ -245,12 +249,14 @@ function Dashboard({ user, onLogout }) {
     setEditingCustomer(customer)
     setEditName(customer.name)
     setEditMobile(customer.mobile)
+    setEditDateOfBirth(customer.dateOfBirth ? new Date(customer.dateOfBirth).toISOString().split('T')[0] : '')
   }
 
   const cancelEdit = () => {
     setEditingCustomer(null)
     setEditName('')
     setEditMobile('')
+    setEditDateOfBirth('')
   }
 
   const handleUpdateCustomer = async (e) => {
@@ -274,7 +280,8 @@ function Dashboard({ user, onLogout }) {
         headers: getAuthHeaders(),
         body: JSON.stringify({
           name: editName.trim(),
-          mobile: editMobile.trim()
+          mobile: editMobile.trim(),
+          dateOfBirth: editDateOfBirth || null
         })
       })
 
@@ -355,10 +362,11 @@ function Dashboard({ user, onLogout }) {
       return
     }
 
-    const headers = ['Name', 'Mobile', 'Added Date']
+    const headers = ['Name', 'Mobile', 'Date of Birth', 'Added Date']
     const rows = customers.map(customer => [
       customer.name,
       customer.mobile,
+      customer.dateOfBirth ? new Date(customer.dateOfBirth).toLocaleDateString() : '',
       new Date(customer.addedDate).toLocaleDateString()
     ])
 
@@ -735,6 +743,16 @@ function Dashboard({ user, onLogout }) {
                 </small>
               </div>
 
+              <div className="form-group">
+                <label htmlFor="dob">Date of Birth (optional)</label>
+                <input
+                  type="date"
+                  id="dob"
+                  value={dateOfBirth}
+                  onChange={(e) => setDateOfBirth(e.target.value)}
+                />
+              </div>
+
               <button type="submit" className="btn btn-primary" disabled={isSubmitting || loading}>
                 {isSubmitting ? 'Adding...' : 'Add Customer'}
               </button>
@@ -794,6 +812,9 @@ function Dashboard({ user, onLogout }) {
                   <h3>Customer Found!</h3>
                   <p><strong>Name:</strong> {searchResult.customer.name}</p>
                   <p><strong>Mobile:</strong> {searchResult.customer.mobile}</p>
+                  {searchResult.customer.dateOfBirth && (
+                    <p><strong>Date of Birth:</strong> {new Date(searchResult.customer.dateOfBirth).toLocaleDateString()}</p>
+                  )}
                   <p><strong>Added:</strong> {new Date(searchResult.customer.addedDate).toLocaleDateString()}</p>
                 </div>
               ) : (
@@ -856,6 +877,15 @@ function Dashboard({ user, onLogout }) {
                             {editMobile.length}/10 digits
                           </small>
                         </div>
+                        <div className="form-group">
+                          <input
+                            type="date"
+                            value={editDateOfBirth}
+                            onChange={(e) => setEditDateOfBirth(e.target.value)}
+                            disabled={loading}
+                            placeholder="Date of Birth"
+                          />
+                        </div>
                         <div className="edit-actions">
                           <button type="submit" className="btn btn-save" disabled={loading}>
                             Save
@@ -870,6 +900,9 @@ function Dashboard({ user, onLogout }) {
                         <div className="customer-info">
                           <h4>{customer.name}</h4>
                           <p>{customer.mobile}</p>
+                          {customer.dateOfBirth && (
+                            <p className="customer-dob">DOB: {new Date(customer.dateOfBirth).toLocaleDateString()}</p>
+                          )}
                         </div>
                         <div className="customer-meta">
                           <div className="customer-date">
@@ -933,6 +966,7 @@ function Dashboard({ user, onLogout }) {
               <ul style={{ marginLeft: '20px', marginTop: '5px' }}>
                 <li><strong>name</strong> or <strong>Name</strong> - Customer name</li>
                 <li><strong>mobile</strong> or <strong>Mobile</strong> - Mobile number</li>
+                <li><strong>dob</strong> or <strong>Date of Birth</strong> - Date of birth (optional)</li>
               </ul>
             </div>
 

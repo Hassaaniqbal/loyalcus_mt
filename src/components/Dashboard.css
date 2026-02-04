@@ -110,6 +110,12 @@ button,
   cursor: not-allowed;
 }
 
+.customer-dob {
+  font-size: 13px;
+  color: #666;
+  margin-top: 2px;
+}
+
 .customer-meta {
   display: flex;
   flex-direction: column;

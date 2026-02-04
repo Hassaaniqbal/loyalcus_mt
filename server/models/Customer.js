@@ -12,6 +12,10 @@ const customerSchema = new mongoose.Schema({
     unique: true,
     trim: true
   },
+  dateOfBirth: {
+    type: Date,
+    default: null
+  },
   addedDate: {
     type: Date,
     default: Date.now

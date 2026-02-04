@@ -39,7 +39,7 @@ router.get('/', async (req, res) => {
 // Add new customer
 router.post('/', async (req, res) => {
   try {
-    const { name, mobile } = req.body
+    const { name, mobile, dateOfBirth } = req.body
 
     // Check if customer with mobile already exists
     const existingCustomer = await Customer.findOne({ mobile })
@@ -49,7 +49,8 @@ router.post('/', async (req, res) => {
 
     const customer = await Customer.create({
       name,
-      mobile
+      mobile,
+      dateOfBirth: dateOfBirth || null
     })
 
     res.status(201).json(customer)
@@ -92,6 +93,7 @@ router.post('/import-excel', upload.single('file'), async (req, res) => {
       // Extract name and mobile (support different column names)
       const name = row.name || row.Name || row.NAME || row['Customer Name'] || row['customer name']
       const mobile = String(row.mobile || row.Mobile || row.MOBILE || row['Mobile Number'] || row['mobile number'] || '').trim()
+      const dob = row.dob || row.DOB || row['Date of Birth'] || row['date of birth'] || row.dateOfBirth || row.DateOfBirth || null
 
       // Validate required fields
       if (!name || !mobile) {
@@ -108,7 +110,8 @@ router.post('/import-excel', upload.single('file'), async (req, res) => {
       parsedRows.push({
         rowNumber,
         name: String(name).trim(),
-        mobile
+        mobile,
+        dateOfBirth: dob ? new Date(dob) : null
       })
     }
 
@@ -134,7 +137,8 @@ router.post('/import-excel', upload.single('file'), async (req, res) => {
       } else {
         customersToInsert.push({
           name: row.name,
-          mobile: row.mobile
+          mobile: row.mobile,
+          dateOfBirth: row.dateOfBirth
         })
       }
     }
@@ -247,7 +251,7 @@ router.delete('/delete-all', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params
-    const { name, mobile } = req.body
+    const { name, mobile, dateOfBirth } = req.body
 
     // Check if another customer with the same mobile exists (excluding current customer)
     const existingCustomer = await Customer.findOne({
@@ -261,7 +265,7 @@ router.put('/:id', async (req, res) => {
 
     const customer = await Customer.findByIdAndUpdate(
       id,
-      { name, mobile },
+      { name, mobile, dateOfBirth: dateOfBirth || null },
       { new: true, runValidators: true }
     )
 
