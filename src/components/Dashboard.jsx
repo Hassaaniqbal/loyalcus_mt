@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import './Dashboard.css'
 import ConfirmModal from './ConfirmModal'
+import DateOfBirthPicker from './DateOfBirthPicker'
 
 // Use relative path for production (Render) or localhost for development
 const API_URL = import.meta.env.PROD ? '/api/customers' : 'http://localhost:5000/api/customers'
@@ -744,12 +745,10 @@ function Dashboard({ user, onLogout }) {
               </div>
 
               <div className="form-group">
-                <label htmlFor="dob">Date of Birth (optional)</label>
-                <input
-                  type="date"
-                  id="dob"
+                <label>Date of Birth (optional)</label>
+                <DateOfBirthPicker
                   value={dateOfBirth}
-                  onChange={(e) => setDateOfBirth(e.target.value)}
+                  onChange={(val) => setDateOfBirth(val)}
                 />
               </div>
 
@@ -878,12 +877,10 @@ function Dashboard({ user, onLogout }) {
                           </small>
                         </div>
                         <div className="form-group">
-                          <input
-                            type="date"
+                          <DateOfBirthPicker
                             value={editDateOfBirth}
-                            onChange={(e) => setEditDateOfBirth(e.target.value)}
+                            onChange={(val) => setEditDateOfBirth(val)}
                             disabled={loading}
-                            placeholder="Date of Birth"
                           />
                         </div>
                         <div className="edit-actions">
